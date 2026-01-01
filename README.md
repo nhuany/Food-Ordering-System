@@ -1,8 +1,12 @@
-# Food-Ordering-System
+# Food Ordering System
 A C++ implementation of the Food Ordering System for a restaurant.
 
 ## Features
-
+- Modify food items on menu
+- Create and submit order to kitchen
+- Calculation of bill
+- Generate daily sales report
+- Provide different interfaces for admin and kitchen
 
 ## Contributing
 
