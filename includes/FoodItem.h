@@ -1,49 +1,51 @@
-#ifndef FOODITEM_H
-#define FOODITEM_H
-
 #include <iostream>
 #include <string>
 #include <iomanip>
-
 using namespace std;
 
 class FoodItem {
 private:
-    int FoodID;
-    string FoodName;
-    string FoodCat;
-    double FoodPrice;
-    
-    // Pointer for MenuList (since it's described as a Node)
-    FoodItem* next; 
+    int foodID;           
+    string foodName; 
+    string foodCategory; 
+    double foodPrice;     
 
 public:
-    FoodItem() : FoodID(0), FoodName(""), FoodCat(""), FoodPrice(0.0), next(nullptr) {}
-
-    FoodItem(int id, string name, string cat, double price) 
-        : FoodID(id), FoodName(name), FoodCat(cat), FoodPrice(price), next(nullptr) {}
-
-    void setFoodInfo(int id, string name, double price, string category) {
-        FoodID = id;
-        FoodName = name;
-        FoodPrice = price;
-        FoodCat = category;
+    // Default constructor
+    FoodItem() {
+        foodID = 0;
+        foodName = "";
+        foodCategory = "";
+        foodPrice = 0.0;
     }
 
-    int getFoodId() const { return FoodID; }
-    string getName() const { return FoodName; }
-    double getPrice() const { return FoodPrice; }
-    string getCategory() const { return FoodCat; }
-    
-    FoodItem* getNext() const { return next; }
-    void setNext(FoodItem* n) { next = n; }
+    // Parameterized constructor
+    FoodItem(int id, string name, double price, string category) {
+        foodID = id;
+        foodName = name;
+        foodPrice = price;
+        foodCategory = category;
+    }
 
+    // Store dish details
+    void setFoodInfo(int id, string name, double price, string category) {
+        foodID = id;
+        foodName = name;
+        foodPrice = price;
+        foodCategory = category;
+    }
+
+    // Get
+    int getFoodId() const { return foodID; }
+    string getName() const { return foodName; }
+    double getPrice() const { return foodPrice; }
+    string getCategory() const { return foodCategory; }
+
+    // Display food info
     void displayItem() const {
-        cout << "ID: " << FoodID 
-             << " | Name: " << FoodName 
-             << " | Category: " << FoodCat 
-             << " | Price: $" << fixed << setprecision(2) << FoodPrice << endl;
+        cout << "Food ID: " << foodID << endl;
+        cout << "Food Name: " << foodName << endl;
+        cout << "Category: " << foodCategory << endl;
+        cout << "Price: RM " << fixed << setprecision(2) << foodPrice << endl;
     }
 };
-
-#endif
