@@ -13,9 +13,9 @@ private:
     int tableNo;
     string status; // pending, preparing, served
     OrderItem* head; // Head of the linked list of OrderItems
-    
+
     // Pointer for KitchenQueue (since Order is a Node in KitchenQueue)
-    Order* next; 
+    Order* next;
 
 public:
     Order();
@@ -23,6 +23,7 @@ public:
     ~Order(); // Destructor to clean up OrderItems
 
     int getOrderID() const;
+    int getTableNo() const;//
     string getStatus() const;
     void setStatus(string s);
 
@@ -35,6 +36,10 @@ public:
     // Queue Node Operations
     Order* getNext() const;
     void setNext(Order* n);
+
+    // Check if order has items
+    void displayOrderSummary() const;
+    bool hasItems() const;
 };
 
 #endif
