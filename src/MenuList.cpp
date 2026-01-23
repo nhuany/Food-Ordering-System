@@ -12,6 +12,10 @@ MenuList::~MenuList() {
     }
 }
 
+bool MenuList::isEmpty() const {
+    return head == nullptr;
+}
+
 void MenuList::addFoodItem(FoodItem* f) {
     if (!f) return;
     if (head == nullptr) {
@@ -23,7 +27,6 @@ void MenuList::addFoodItem(FoodItem* f) {
         }
         current->setNext(f);
     }
-    cout << "Food item added: " << f->getName() << endl;
 }
 
 void MenuList::deleteFoodItem(int id) {
@@ -56,7 +59,19 @@ void MenuList::editFoodItem(int id, string newName, string newCat, double newPri
     FoodItem* current = head;
     while (current != nullptr) {
         if (current->getFoodId() == id) {
-            current->setFoodInfo(id, newName, newPrice, newCat);
+            // Only update if new value is not empty
+            if (!newName.empty()) {
+                // Update the name
+                current->setFoodInfo(id, newName, current->getCategory(), current->getPrice());
+            }
+            if (!newCat.empty()) {
+                // Update the category
+                current->setFoodInfo(id, current->getName(), newCat, current->getPrice());
+            }
+            if (newPrice >= 0) { // -1 means keep current price
+                // Update the price
+                current->setFoodInfo(id, current->getName(), current->getCategory(), newPrice);
+            }
             cout << "Food item updated successfully." << endl;
             return;
         }
@@ -80,16 +95,36 @@ FoodItem* MenuList::searchFoodByName(string name) const {
 
 void MenuList::displayMenu() const {
     if (head == nullptr) {
-        cout << "Menu is empty." << endl;
+        cout << "\n========================================" << endl;
+        cout << "           MENU IS EMPTY               " << endl;
+        cout << "========================================" << endl;
         return;
     }
-    cout << "\n--- MENU ---" << endl;
+
+    cout << "\n==================================================================" << endl;
+    cout << "                           MENU LIST                               " << endl;
+    cout << "==================================================================" << endl;
+    cout << left << setw(8) << "ID"
+         << setw(25) << "ITEM NAME"
+         << setw(15) << "CATEGORY"
+         << setw(10) << "PRICE" << endl;
+    cout << "==================================================================" << endl;
+
     FoodItem* current = head;
     while (current != nullptr) {
-        current->displayItem();
+        cout << left << setw(8) << current->getFoodId()
+             << setw(25) << current->getName()
+             << setw(15) << current->getCategory()
+             << "RM " << fixed << setprecision(2) << current->getPrice() << endl;
+
+        if (current->getNext() != nullptr) {
+            cout << "------------------------------------------------------------------" << endl;
+        }
+
         current = current->getNext();
     }
-    cout << "------------" << endl;
+
+    cout << "==================================================================" << endl;
 }
 
 void MenuList::sortMenuByPrice() {
@@ -110,11 +145,11 @@ void MenuList::sortMenuByPrice() {
                 current->setFoodInfo(
                     current->getNext()->getFoodId(),
                     current->getNext()->getName(),
-                    current->getNext()->getPrice(),
-                    current->getNext()->getCategory()
+                    current->getNext()->getCategory(),
+                    current->getNext()->getPrice()
                 );
 
-                current->getNext()->setFoodInfo(id, name, price, cat);
+                current->getNext()->setFoodInfo(id, name, cat, price);
 
                 swapped = true;
             }
