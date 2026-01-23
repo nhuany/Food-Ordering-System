@@ -12,13 +12,13 @@ void KitchenQueue::enqueueOrder(Order* o) {
     if (o == nullptr) return;
 
     // Resetting the next pointer of the incoming order to ensure cleanliness
-    o->setNext(nullptr); 
+    o->setNext(nullptr);
 
     if (isEmpty()) {
         front = o;
         rear = o;
         // Circular Linked List: rear points to front
-        rear->setNext(front); 
+        rear->setNext(front);
     } else {
         rear->setNext(o);
         rear = o;
@@ -55,7 +55,6 @@ void KitchenQueue::viewNextOrder() const {
     if (isEmpty()) {
         cout << "No pending orders." << endl;
     } else {
-        cout << "Next Order to Prepare:" << endl;
         front->printReceipt(); // Using printReceipt to show details
     }
 }
@@ -66,19 +65,65 @@ bool KitchenQueue::isEmpty() const {
 
 void KitchenQueue::displayQueue() const {
     if (isEmpty()) {
-        cout << "Kitchen Queue is Empty." << endl;
+        cout << "\n========================================================" << endl;
+        cout << "             NO ACTIVE ORDERS                         " << endl;
+        cout << "========================================================" << endl;
         return;
     }
 
-    cout << "\n--- Current Kitchen Queue ---" << endl;
+    cout << "\n========================================================" << endl;
+    cout << "                 CURRENT ORDERS                        " << endl;
+    cout << "========================================================" << endl;
+
     Order* current = front;
+    int orderCount = 0;
+
     do {
-        cout << "Order ID: " << current->getOrderID() << " (Table " << current->getOrderID() << ")" << endl; // Assuming TableNo access or ID
-        // Actually Order class doesn't expose getTableNo publicly in my code above?
-        // Let's check Order.h... I created `getOrderID`. I did not create `getTableNo`.
-        // I will add it if needed or just show OrderID.
-        
+        orderCount++;
+        cout << "\n- ORDER #" << orderCount << " -" << endl;
+        cout << "--------------------------------------------------------" << endl;
+        cout << "Order ID: " << current->getOrderID() << endl;
+        cout << "Table: " << current->getTableNo() << endl;
+        cout << "Status: " << current->getStatus() << endl;
+        cout << "--------------------------------------------------------" << endl;
+
+        // Show food items if order has them
+        if (current->hasItems()) {
+            current->displayOrderSummary();
+        } else {
+            cout << "No food items in this order." << endl;
+        }
+
+        cout << "--------------------------------------------------------" << endl;
+
         current = current->getNext();
     } while (current != front);
-    cout << "-----------------------------" << endl;
+
+    cout << "\nTotal Active Orders: " << orderCount << endl;
+    cout << "========================================================" << endl;
+}
+
+Order* KitchenQueue::findOrder(int orderID) const {
+    if (isEmpty()) {
+        return nullptr;
+    }
+
+    Order* current = front;
+    do {
+        if (current->getOrderID() == orderID) {
+            return current;
+        }
+        current = current->getNext();
+    } while (current != front);
+
+    return nullptr;
+}
+
+bool KitchenQueue::updateOrderStatus(int orderID, const string& newStatus) {
+    Order* order = findOrder(orderID);
+    if (order != nullptr) {
+        order->setStatus(newStatus);
+        return true;
+    }
+    return false;
 }
