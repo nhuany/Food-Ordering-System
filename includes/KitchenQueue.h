@@ -20,6 +20,8 @@ public:
     void viewNextOrder() const;
     bool isEmpty() const;
     void displayQueue() const;
+    bool updateOrderStatus(int orderID, const string& newStatus);
+    Order* findOrder(int orderID) const;
 };
 
 #endif
