@@ -17,6 +17,10 @@ int Order::getOrderID() const {
     return orderID;
 }
 
+int Order::getTableNo() const { //
+    return tableNo;
+}
+
 string Order::getStatus() const {
     return status;
 }
@@ -88,15 +92,15 @@ void Order::printReceipt() const {
     cout << "Order ID: " << orderID << "   Table: " << tableNo << endl;
     cout << "Status: " << status << endl;
     cout << "----------------------------------------" << endl;
-    
+
     OrderItem* current = head;
     while (current != nullptr) {
         current->displayItemLine();
         current = current->getNext();
     }
-    
+
     cout << "----------------------------------------" << endl;
-    cout << "Total (inc 6% tax): $" << fixed << setprecision(2) << calculateTotal() << endl;
+    cout << "Total (inc 6% tax): RM" << fixed << setprecision(2) << calculateTotal() << endl;
     cout << "========================================" << endl;
 }
 
@@ -106,4 +110,31 @@ Order* Order::getNext() const {
 
 void Order::setNext(Order* n) {
     next = n;
+}
+
+bool Order::hasItems() const {
+    return head != nullptr;
+}
+
+void Order::displayOrderSummary() const {
+    if (head == nullptr) {
+        cout << "No items in order." << endl;
+        return;
+    }
+
+    OrderItem* current = head;
+    int itemCount = 0;
+
+    cout << "Food Items:" << endl;
+    cout << "--------------------------------------------------------" << endl;
+
+    while (current != nullptr) {
+        itemCount++;
+        cout << itemCount << ". ";
+        current->displayItemLine();
+        current = current->getNext();
+    }
+
+    cout << "--------------------------------------------------------" << endl;
+    cout << "Total items: " << itemCount << endl;
 }
