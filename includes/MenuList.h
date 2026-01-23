@@ -22,6 +22,7 @@ public:
     FoodItem* searchFoodByName(string name) const;
     void displayMenu() const;
     void sortMenuByPrice();
+    bool isEmpty() const;
 };
 
 #endif
