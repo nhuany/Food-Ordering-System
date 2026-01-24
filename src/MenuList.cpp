@@ -128,8 +128,7 @@ void MenuList::displayMenu() const {
     cout << "==================================================================" << endl;
 }
 
-#include <algorithm>
-#include <vector>
+
 
 void MenuList::displaySortedByPrice() const {
     if (head == nullptr) {
@@ -137,20 +136,34 @@ void MenuList::displaySortedByPrice() const {
         return;
     }
 
-    // Capture pointers in a vector
-    vector<FoodItem*> items;
+    // 1. Count nodes
+    int count = 0;
     FoodItem* current = head;
     while (current != nullptr) {
-        items.push_back(current);
+        count++;
         current = current->getNext();
     }
 
-    // Sort the vector using a lambda
-    sort(items.begin(), items.end(), [](FoodItem* a, FoodItem* b) {
-        return a->getPrice() < b->getPrice();
-    });
+    // 2. Create dynamic array of pointers
+    FoodItem** items = new FoodItem*[count];
+    current = head;
+    for (int i = 0; i < count; i++) {
+        items[i] = current;
+        current = current->getNext();
+    }
 
-    // Display
+    // 3. Bubble Sort by Price
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (items[j]->getPrice() > items[j + 1]->getPrice()) {
+                FoodItem* temp = items[j];
+                items[j] = items[j + 1];
+                items[j + 1] = temp;
+            }
+        }
+    }
+
+    // 4. Display
     cout << "\n==================================================================" << endl;
     cout << "                    MENU LIST (Sorted by Price)                   " << endl;
     cout << "==================================================================" << endl;
@@ -159,19 +172,13 @@ void MenuList::displaySortedByPrice() const {
          << setw(15) << "CATEGORY"
          << setw(10) << "PRICE" << endl;
     cout << "==================================================================" << endl;
-
-    for (size_t i = 0; i < items.size(); ++i) {
-        FoodItem* item = items[i];
-        cout << left << setw(8) << item->getFoodId()
-             << setw(25) << item->getName()
-             << setw(15) << item->getCategory()
-             << "RM " << fixed << setprecision(2) << item->getPrice() << endl;
-             
-        if (i < items.size() - 1) {
-             cout << "------------------------------------------------------------------" << endl;
-        }
+    for (int i = 0; i < count; i++) {
+        items[i]->displayItemLine();
     }
     cout << "==================================================================" << endl;
+
+    // 5. Cleanup
+    delete[] items;
 }
 
 void MenuList::displaySortedByCategory() const {
@@ -180,41 +187,49 @@ void MenuList::displaySortedByCategory() const {
         return;
     }
 
-    // Capture pointers in a vector
-    vector<FoodItem*> items;
+    // 1. Count nodes
+    int count = 0;
     FoodItem* current = head;
     while (current != nullptr) {
-        items.push_back(current);
+        count++;
         current = current->getNext();
     }
 
-    // Sort the vector
-    sort(items.begin(), items.end(), [](FoodItem* a, FoodItem* b) {
-        return a->getCategory() < b->getCategory();
-    });
+    // 2. Create dynamic array of pointers
+    FoodItem** items = new FoodItem*[count];
+    current = head;
+    for (int i = 0; i < count; i++) {
+        items[i] = current;
+        current = current->getNext();
+    }
 
-    // Display
+    // 3. Bubble Sort by Category
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (items[j]->getCategory() > items[j + 1]->getCategory()) {
+                FoodItem* temp = items[j];
+                items[j] = items[j + 1];
+                items[j + 1] = temp;
+            }
+        }
+    }
+
+    // 4. Display
     cout << "\n==================================================================" << endl;
-    cout << "                   MENU LIST (Sorted by Category)                 " << endl;
+    cout << "                  MENU LIST (Sorted by Category)                  " << endl;
     cout << "==================================================================" << endl;
     cout << left << setw(8) << "ID"
          << setw(25) << "ITEM NAME"
          << setw(15) << "CATEGORY"
          << setw(10) << "PRICE" << endl;
     cout << "==================================================================" << endl;
-
-    for (size_t i = 0; i < items.size(); ++i) {
-        FoodItem* item = items[i];
-        cout << left << setw(8) << item->getFoodId()
-             << setw(25) << item->getName()
-             << setw(15) << item->getCategory()
-             << "RM " << fixed << setprecision(2) << item->getPrice() << endl;
-
-        if (i < items.size() - 1) {
-             cout << "------------------------------------------------------------------" << endl;
-        }
+    for (int i = 0; i < count; i++) {
+        items[i]->displayItemLine();
     }
     cout << "==================================================================" << endl;
+
+    // 5. Cleanup
+    delete[] items;
 }
 
 void MenuList::saveToFile(const string& filename) const {

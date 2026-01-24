@@ -57,6 +57,13 @@ public:
         cout << "Category: " << foodCategory << endl;
         cout << "Price: RM " << fixed << setprecision(2) << foodPrice << endl;
     }
+
+    void displayItemLine() const {
+        cout << left << setw(8) << foodID
+             << setw(25) << foodName
+             << setw(15) << foodCategory
+             << "RM " << fixed << setprecision(2) << foodPrice << endl;
+    }
 };
 
 #endif
