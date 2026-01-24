@@ -89,7 +89,7 @@ void KitchenQueue::displayQueue() const {
 
         // Show food items if order has them
         if (current->hasItems()) {
-            current->displayOrderSummary();
+            current->displayPendingItems();
         } else {
             cout << "No food items in this order." << endl;
         }
@@ -126,4 +126,100 @@ bool KitchenQueue::updateOrderStatus(int orderID, const string& newStatus) {
         return true;
     }
     return false;
+}
+
+void KitchenQueue::displayOrdersForTable(int tableNo) const {
+    if (isEmpty()) {
+        cout << "\n--------------------------------------------------------" << endl;
+        cout << "          No active orders in the kitchen.            " << endl;
+        cout << "--------------------------------------------------------" << endl;
+        return;
+    }
+
+    bool found = false;
+    Order* current = front;
+    
+    cout << "\n========================================================" << endl;
+    cout << "           ORDERS FOR TABLE " << tableNo << "                     " << endl;
+    cout << "========================================================" << endl;
+
+    do {
+        if (current->getTableNo() == tableNo) {
+            found = true;
+            cout << "\nOrder ID: " << current->getOrderID() << endl;
+            cout << "Status: " << current->getStatus() << endl;
+            cout << "--------------------------------------------------------" << endl;
+            
+            if (current->hasItems()) {
+                current->displayOrderSummary();
+            }
+            cout << "--------------------------------------------------------" << endl;
+        }
+        current = current->getNext();
+    } while (current != front);
+
+    if (!found) {
+        cout << "\nNo active orders found for Table " << tableNo << "." << endl;
+    }
+    cout << "========================================================" << endl;
+}
+
+Order* KitchenQueue::findPendingOrder(int tableNo) const {
+    if (isEmpty()) return nullptr;
+
+    Order* current = front;
+    do {
+        if (current->getTableNo() == tableNo && current->getStatus() == "pending") {
+            return current;
+        }
+        current = current->getNext();
+    } while (current != front);
+
+    return nullptr;
+}
+
+Order* KitchenQueue::getFront() const {
+    return front;
+}
+
+bool KitchenQueue::removeOrder(int orderID) {
+    if (isEmpty()) return false;
+
+    Order* current = front;
+    Order* prev = rear; // In circular queue, prev of front is rear
+
+    do {
+        if (current->getOrderID() == orderID) {
+            // Found the order to remove
+            
+            // Case 1: Only one node in queue
+            if (front == rear) {
+                front = nullptr;
+                rear = nullptr;
+            }
+            // Case 2: Removing the front node
+            else if (current == front) {
+                front = front->getNext();
+                rear->setNext(front);
+            }
+            // Case 3: Removing the rear node
+            else if (current == rear) {
+                rear = prev;
+                rear->setNext(front);
+            }
+            // Case 4: Removing a middle node
+            else {
+                prev->setNext(current->getNext());
+            }
+
+            cout << "Order " << orderID << " removed from kitchen queue." << endl;
+            // DO NOT delete the Order object - it is managed by OrderList/RestaurantSystem
+            return true;
+        }
+
+        prev = current;
+        current = current->getNext();
+    } while (current != front);
+
+    return false; // Order not found
 }

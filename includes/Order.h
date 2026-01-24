@@ -30,6 +30,12 @@ public:
     // List Operations
     void addFoodOrder(int orderItemID, FoodItem* f, int qty);
     void removeFoodFromOrder(int orderItemID);
+    bool removeFoodByIndex(int index);
+    bool serveItemByIndex(int index);
+    void serveAllItems();
+    bool servePendingItem(int displayIndex);
+    void displayPendingItems() const;
+    bool checkAllServed() const;
     double calculateTotal() const;
     void printReceipt() const;
 

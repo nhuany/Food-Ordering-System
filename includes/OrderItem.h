@@ -12,6 +12,7 @@ private:
     int OrderItemID;
     FoodItem* food; // Pointer to the FoodItem to access details
     int Quantity;
+    string status; // "pending", "served"
     
     OrderItem* next; // Pointer to next OrderItem in the Order list
 
@@ -21,6 +22,10 @@ public:
 
     int getOrderItemID() const;
     void setItemDetails(int id, FoodItem* f, int qty);
+    
+    string getStatus() const;
+    void setStatus(string s);
+
     double calculateSubtotal() const;
     void displayItemLine() const;
     

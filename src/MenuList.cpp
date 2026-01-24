@@ -1,5 +1,6 @@
 #include "MenuList.h"
 #include <iomanip>
+#include <fstream>
 
 MenuList::MenuList() : head(nullptr) {}
 
@@ -127,35 +128,126 @@ void MenuList::displayMenu() const {
     cout << "==================================================================" << endl;
 }
 
-void MenuList::sortMenuByPrice() {
-    if (head == nullptr || head->getNext() == nullptr) return;
+#include <algorithm>
+#include <vector>
 
-    bool swapped;
-    do {
-        swapped = false;
-        FoodItem* current = head;
-        while (current->getNext() != nullptr) {
-            if (current->getPrice() > current->getNext()->getPrice()) {
-                // Swap values instead of nodes
-                int id = current->getFoodId();
-                string name = current->getName();
-                string cat = current->getCategory();
-                double price = current->getPrice();
+void MenuList::displaySortedByPrice() const {
+    if (head == nullptr) {
+        cout << "Menu is empty." << endl;
+        return;
+    }
 
-                current->setFoodInfo(
-                    current->getNext()->getFoodId(),
-                    current->getNext()->getName(),
-                    current->getNext()->getCategory(),
-                    current->getNext()->getPrice()
-                );
+    // Capture pointers in a vector
+    vector<FoodItem*> items;
+    FoodItem* current = head;
+    while (current != nullptr) {
+        items.push_back(current);
+        current = current->getNext();
+    }
 
-                current->getNext()->setFoodInfo(id, name, cat, price);
+    // Sort the vector using a lambda
+    sort(items.begin(), items.end(), [](FoodItem* a, FoodItem* b) {
+        return a->getPrice() < b->getPrice();
+    });
 
-                swapped = true;
-            }
-            current = current->getNext();
+    // Display
+    cout << "\n==================================================================" << endl;
+    cout << "                    MENU LIST (Sorted by Price)                   " << endl;
+    cout << "==================================================================" << endl;
+    cout << left << setw(8) << "ID"
+         << setw(25) << "ITEM NAME"
+         << setw(15) << "CATEGORY"
+         << setw(10) << "PRICE" << endl;
+    cout << "==================================================================" << endl;
+
+    for (size_t i = 0; i < items.size(); ++i) {
+        FoodItem* item = items[i];
+        cout << left << setw(8) << item->getFoodId()
+             << setw(25) << item->getName()
+             << setw(15) << item->getCategory()
+             << "RM " << fixed << setprecision(2) << item->getPrice() << endl;
+             
+        if (i < items.size() - 1) {
+             cout << "------------------------------------------------------------------" << endl;
         }
-    } while (swapped);
+    }
+    cout << "==================================================================" << endl;
+}
 
-    cout << "Menu sorted by price successfully." << endl;
+void MenuList::displaySortedByCategory() const {
+    if (head == nullptr) {
+        cout << "Menu is empty." << endl;
+        return;
+    }
+
+    // Capture pointers in a vector
+    vector<FoodItem*> items;
+    FoodItem* current = head;
+    while (current != nullptr) {
+        items.push_back(current);
+        current = current->getNext();
+    }
+
+    // Sort the vector
+    sort(items.begin(), items.end(), [](FoodItem* a, FoodItem* b) {
+        return a->getCategory() < b->getCategory();
+    });
+
+    // Display
+    cout << "\n==================================================================" << endl;
+    cout << "                   MENU LIST (Sorted by Category)                 " << endl;
+    cout << "==================================================================" << endl;
+    cout << left << setw(8) << "ID"
+         << setw(25) << "ITEM NAME"
+         << setw(15) << "CATEGORY"
+         << setw(10) << "PRICE" << endl;
+    cout << "==================================================================" << endl;
+
+    for (size_t i = 0; i < items.size(); ++i) {
+        FoodItem* item = items[i];
+        cout << left << setw(8) << item->getFoodId()
+             << setw(25) << item->getName()
+             << setw(15) << item->getCategory()
+             << "RM " << fixed << setprecision(2) << item->getPrice() << endl;
+
+        if (i < items.size() - 1) {
+             cout << "------------------------------------------------------------------" << endl;
+        }
+    }
+    cout << "==================================================================" << endl;
+}
+
+void MenuList::saveToFile(const string& filename) const {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cout << "Error: Could not open file for saving." << endl;
+        return;
+    }
+
+    FoodItem* current = head;
+    while (current != nullptr) {
+        // Format: ID,Name,Category,Price
+        file << current->getFoodId() << ","
+             << current->getName() << ","
+             << current->getCategory() << ","
+             << current->getPrice();
+             
+        if (current->getNext() != nullptr) {
+            file << endl;
+        }
+        current = current->getNext();
+    }
+    file.close();
+    cout << "Menu data saved successfully." << endl;
+}
+
+FoodItem* MenuList::getFoodByID(int id) const {
+    FoodItem* current = head;
+    while (current != nullptr) {
+        if (current->getFoodId() == id) {
+            return current;
+        }
+        current = current->getNext();
+    }
+    return nullptr;
 }

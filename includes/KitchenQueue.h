@@ -20,8 +20,12 @@ public:
     void viewNextOrder() const;
     bool isEmpty() const;
     void displayQueue() const;
+    void displayOrdersForTable(int tableNo) const;
+    Order* findPendingOrder(int tableNo) const;
     bool updateOrderStatus(int orderID, const string& newStatus);
     Order* findOrder(int orderID) const;
+    bool removeOrder(int orderID);
+    Order* getFront() const;
 };
 
 #endif

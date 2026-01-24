@@ -3,6 +3,7 @@
 
 #include "MenuList.h"
 #include "KitchenQueue.h"
+#include "OrderList.h"
 #include "Order.h"
 #include "FoodItem.h"
 #include <string>
@@ -10,7 +11,8 @@
 class RestaurantSystem {
 private:
     MenuList menu;
-    KitchenQueue kitchen;
+    KitchenQueue kitchen;      // Circular queue for kitchen processing
+    OrderList allOrders;       // Linked list for all orders (billing)
     int nextOrderID;
     int nextOrderItemID;
 
@@ -28,9 +30,10 @@ public:
     void searchMenuItem();
 
     // Order Management
-    void createOrder();
-    void viewOrders();
-    void updateOrderStatus();
+    // Order Management
+    void createOrder(int tableNo);
+    void viewMyOrders(int tableNo);
+    void cancelOrder();
 
     // Kitchen Management
     void viewKitchenQueue();

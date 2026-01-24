@@ -18,30 +18,46 @@ RestaurantSystem::~RestaurantSystem() {
 }
 
 void RestaurantSystem::saveMenuData() {
-    ofstream file("menu.txt");
-    if (file.is_open()) {
-        // For simplicity, we'll implement saving later
-        // For now, just a placeholder
-        file.close();
-    }
+    menu.saveToFile("menu.txt");
 }
 
 void RestaurantSystem::initializeMenu() {
-    // Load menu from file or create default items
+    // Load menu from file
     ifstream file("menu.txt");
-    if (file.is_open()) {
-        int id;
-        string name, category;
-        double price;
+    bool loaded = false;
 
-        while (file >> id >> ws && getline(file, name, ',') &&
-               getline(file, category, ',') >> price) {
-            FoodItem* newItem = new FoodItem(id, name, category, price);
-            menu.addFoodItem(newItem);
+    if (file.is_open()) {
+        // Check if file is empty
+        if (file.peek() == ifstream::traits_type::eof()) {
+            // File exists but is empty
+            loaded = false;
+        } else {
+            int id;
+            string name, category, priceStr;
+            double price;
+
+            // Reading CSV-like format: ID,Name,Category,Price
+            while (file >> id) {
+                if (file.peek() == ',') file.ignore();
+                getline(file, name, ',');
+                getline(file, category, ',');
+                file >> price;
+                
+                // Using newlines
+                file.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                FoodItem* newItem = new FoodItem(id, name, category, price);
+                menu.addFoodItem(newItem);
+                loaded = true;
+            }
         }
         file.close();
-    } else {
-        // Create default menu items SILENTLY (no cout messages)
+    }
+
+    // If loading failed or file was empty/missing, create defaults
+    if (!loaded || menu.isEmpty()) {
+        cout << "[System] Initializing default menu items..." << endl;
+        
         FoodItem* item1 = new FoodItem(101, "Burger", "Main Course", 12.99);
         FoodItem* item2 = new FoodItem(102, "Fries", "Side", 5.99);
         FoodItem* item3 = new FoodItem(103, "Coke", "Beverage", 3.50);
@@ -49,7 +65,6 @@ void RestaurantSystem::initializeMenu() {
         FoodItem* item5 = new FoodItem(105, "Salad", "Appetizer", 8.99);
         FoodItem* item6 = new FoodItem(106, "Ice Cream", "Dessert", 6.50);
 
-        // Add items without printing messages
         menu.addFoodItem(item1);
         menu.addFoodItem(item2);
         menu.addFoodItem(item3);
@@ -75,7 +90,12 @@ void RestaurantSystem::addMenuItem() {
     while (true) {
         cout << "Enter Food ID (must be positive integer): ";
         if (cin >> id && id > 0) {
-            break;
+            // Check if ID already exists
+            if (menu.getFoodByID(id) != nullptr) {
+                cout << "Error: Food ID " << id << " already exists! Please choose another ID." << endl;
+            } else {
+                break;
+            }
         } else {
             cout << "Invalid input! Please enter a positive integer." << endl;
             cin.clear();
@@ -280,28 +300,15 @@ void RestaurantSystem::searchMenuItem() {
 }
 
 // Order Management Functions
-void RestaurantSystem::createOrder() {
-    cout << "\n=== CREATE NEW ORDER ===" << endl;
-
-    int tableNo;
-    while (true) {
-        cout << "Enter table number (1-20): ";
-        if (cin >> tableNo && tableNo >= 1 && tableNo <= 20) {
-            break;
-        } else {
-            cout << "Invalid input! Please enter a table number between 1-20." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-    }
-
+void RestaurantSystem::createOrder(int tableNo) {
+    // Always create a NEW order to maintain FIFO kitchen queue order
+    cout << "\n=== CREATE NEW ORDER (Table " << tableNo << ") ===" << endl;
     Order* newOrder = new Order(nextOrderID, tableNo);
-    nextOrderID++;
 
     char addMore = 'Y';
     int itemCount = 0;
 
-    while (toupper(addMore) == 'Y' && itemCount < 10) { // Limit to 10 items per order
+    while (toupper(addMore) == 'Y') {
         displayMenu();
 
         int foodID, quantity;
@@ -319,6 +326,13 @@ void RestaurantSystem::createOrder() {
 
         if (foodID == 0) break;
 
+        // Lookup Food Item
+        FoodItem* food = menu.getFoodByID(foodID);
+        if (food == nullptr) {
+            cout << "Error: Food ID " << foodID << " not found in menu." << endl;
+            continue;
+        }
+
         while (true) {
             cout << "Enter quantity (1-10): ";
             if (cin >> quantity && quantity >= 1 && quantity <= 10) {
@@ -330,46 +344,72 @@ void RestaurantSystem::createOrder() {
             }
         }
 
-        // For demonstration, we'll create a temporary food item
-        FoodItem* orderedFood = new FoodItem(foodID, "Item", "Category", 10.00);
-
-        newOrder->addFoodOrder(nextOrderItemID, orderedFood, quantity);
+        // Add food item to order
+        newOrder->addFoodOrder(nextOrderItemID, food, quantity);
         nextOrderItemID++;
         itemCount++;
 
-        cout << "Item added to order. (" << itemCount << " items total)" << endl;
+        cout << "Added: " << food->getName() << " x" << quantity << endl;
 
-        if (itemCount < 10) {
-            cout << "Add another item? (Y/N): ";
-            cin >> addMore;
-        } else {
-            cout << "Maximum items per order reached (10 items)." << endl;
-            break;
-        }
+        cout << "Add another item? (Y/N): ";
+        cin >> addMore;
     }
 
-    // Add order to kitchen queue
-    kitchen.enqueueOrder(newOrder);
-    cout << "\nOrder " << newOrder->getOrderID() << " created and sent to kitchen!" << endl;
+    if (itemCount > 0) {
+        // Add to BOTH data structures:
+        // 1. OrderList (linked list) - for customer billing/viewing
+        allOrders.addOrder(newOrder);
+        // 2. KitchenQueue (circular queue) - for kitchen processing
+        kitchen.enqueueOrder(newOrder);
+        
+        nextOrderID++;
+        cout << "\nOrder " << newOrder->getOrderID() << " created and sent to kitchen!" << endl;
+    } else {
+        cout << "\nOrder cancelled (no items added)." << endl;
+        delete newOrder;
+    }
 }
 
-void RestaurantSystem::viewOrders() {
+void RestaurantSystem::viewMyOrders(int tableNo) {
     cout << "\n========================================================" << endl;
-    cout << "               VIEW YOUR ORDER                         " << endl;
+    cout << "           YOUR ORDERS (Table " << tableNo << ")              " << endl;
     cout << "========================================================" << endl;
 
-    if (kitchen.isEmpty()) {
-        cout << "\n--------------------------------------------------------" << endl;
-        cout << "          No orders to display at the moment.         " << endl;
-        cout << "--------------------------------------------------------" << endl;
-    } else {
-        cout << "\nHere is your current order receipt:\n" << endl;
-        cout << "========================================================" << endl;
+    // Check OrderList (linked list) - NOT KitchenQueue
+    int orderCount = allOrders.getOrderCountForTable(tableNo);
+    
+    if (orderCount == 0) {
+        cout << "\nNo orders found for your table." << endl;
+        cout << "\nPress Enter to return to menu...";
+        cin.ignore();
+        cin.get();
+        return;
+    }
 
-        kitchen.viewNextOrder();
+    // Display orders from OrderList
+    allOrders.displayOrdersForTable(tableNo);
+    
+    // Calculate total from OrderList
+    double grandTotal = allOrders.calculateTableTotal(tableNo);
+
+    // Show bill summary
+    cout << "\n========================================================" << endl;
+    cout << "  TOTAL ORDERS: " << orderCount << endl;
+    cout << "  GRAND TOTAL (inc 6% tax): RM" << fixed << setprecision(2) << grandTotal << endl;
+    cout << "========================================================" << endl;
+
+    char payChoice;
+    cout << "\nWould you like to pay now? (Y/N): ";
+    cin >> payChoice;
+
+    if (toupper(payChoice) == 'Y') {
+        // Clear all orders for this table from the list (simulating payment and clearing table)
+        allOrders.clearOrdersForTable(tableNo);
 
         cout << "\n========================================================" << endl;
-        cout << "Note: If you have multiple orders, please ask staff for assistance." << endl;
+        cout << "          PAYMENT SUCCESSFUL!                          " << endl;
+        cout << "          Thank you for dining with us!                " << endl;
+        cout << "========================================================" << endl;
     }
 
     cout << "\nPress Enter to return to menu...";
@@ -378,59 +418,70 @@ void RestaurantSystem::viewOrders() {
 }
 
 
-void RestaurantSystem::updateOrderStatus() {
+
+void RestaurantSystem::cancelOrder() {
     cout << "\n========================================================" << endl;
-    cout << "               UPDATE ORDER STATUS                     " << endl;
+    cout << "               CANCEL ORDER                             " << endl;
     cout << "========================================================" << endl;
 
     if (kitchen.isEmpty()) {
         cout << "\n--------------------------------------------------------" << endl;
-        cout << "          No orders to update.                         " << endl;
+        cout << "          No orders in kitchen to cancel.              " << endl;
         cout << "--------------------------------------------------------" << endl;
         return;
     }
 
-    // Show current orders
     cout << "\nCurrent Orders in System:" << endl;
-    cout << "========================================================" << endl;
     kitchen.displayQueue();
 
-    // Simple input
     int orderID;
-    cout << "\nEnter Order ID: ";
-    cin >> orderID;
-
-    cout << "\n========================================================" << endl;
-    cout << "         SELECT NEW STATUS                            " << endl;
-    cout << "========================================================" << endl;
-    cout << "1. Pending     | 2. Preparing" << endl;
-    cout << "3. Ready       | 4. Served" << endl;
-    cout << "5. Cancelled" << endl;
-    cout << "========================================================" << endl;
-
-    int choice;
-    cout << "Choice (1-5): ";
-    cin >> choice;
-
-    string status;
-    switch(choice) {
-        case 1: status = "Pending"; break;
-        case 2: status = "Preparing"; break;
-        case 3: status = "Ready"; break;
-        case 4: status = "Served"; break;
-        case 5: status = "Cancelled"; break;
-        default:
-            cout << "\nInvalid choice!" << endl;
-            return;
+    cout << "\nEnter Order ID to modify: ";
+    while (!(cin >> orderID)) {
+        cout << "Invalid input! Please enter a numeric Order ID: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
-    // Simple update message
-    cout << "\n========================================================" << endl;
-    cout << "      Order " << orderID << " status changed to: " << status << endl;
-    cout << "========================================================" << endl;
+    Order* order = allOrders.findOrderByID(orderID);
+    if (!order) {
+        cout << "Order ID " << orderID << " not found." << endl;
+        return;
+    }
 
-    // Note: In full implementation, actually update the order
-    cout << "\n[Status update recorded]" << endl;
+    // Display order items
+    order->displayOrderSummary();
+
+    int itemIndex;
+    cout << "\nEnter Item Index to cancel (0 to cancel entire order): ";
+    while (!(cin >> itemIndex)) {
+        cout << "Invalid input! Please enter a number: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    if (itemIndex == 0) {
+        char confirm;
+        cout << "Are you sure you want to cancel the ENTIRE Order " << orderID << "? (Y/N): ";
+        cin >> confirm;
+        if (toupper(confirm) == 'Y') {
+             kitchen.removeOrder(orderID);
+             allOrders.removeOrder(orderID);
+             cout << "Order " << orderID << " cancelled entirely." << endl;
+        }
+    } else {
+        if (order->removeFoodByIndex(itemIndex)) {
+            cout << "Item #" << itemIndex << " removed from order." << endl;
+            
+            // Check if order is now empty
+            if (!order->hasItems()) {
+                cout << "Order " << orderID << " is now empty. Removing order from system..." << endl;
+                kitchen.removeOrder(orderID);
+                allOrders.removeOrder(orderID);
+            }
+        } else {
+             cout << "Failed to remove item. Invalid index or order served." << endl;
+        }
+    }
 }
 
 // Kitchen Management Functions
@@ -447,27 +498,80 @@ void RestaurantSystem::processNextOrder() {
         return;
     }
 
-    kitchen.viewNextOrder();
+    // Get the front order to display and potentially update
+    Order* nextOrder = kitchen.getFront();
+    if (nextOrder == nullptr) {
+        cout << "No orders in the kitchen queue." << endl;
+        return;
+    }
 
-    char complete;
-    while (true) {
-        cout << "Mark this order as completed? (Y/N): ";
-        cin >> complete;
-        complete = toupper(complete);
-
-        if (complete == 'Y' || complete == 'N') {
+    // Find the first pending order to process
+    Order* current = nextOrder;
+    Order* orderToProcess = nullptr;
+    do {
+        if (current->getStatus() == "pending") {
+            orderToProcess = current;
             break;
         }
-        cout << "Invalid input! Please enter Y or N." << endl;
+        current = current->getNext();
+    } while (current != nextOrder);
+
+    if (orderToProcess == nullptr) {
+        cout << "No pending orders to process." << endl;
+        return;
+    }
+
+    // Display the order to process with item details and status (Filtered for Kitchen)
+    cout << "\n==============================================" << endl;
+    cout << "           ORDER PROCESSING TICKET            " << endl;
+    cout << "==============================================" << endl;
+    cout << "Order ID: " << orderToProcess->getOrderID() << endl;
+    cout << "Table: " << orderToProcess->getTableNo() << endl;
+    cout << "==============================================" << endl;
+    
+    orderToProcess->displayPendingItems(); 
+
+    int serveChoice;
+    while (true) {
+        cout << "\nEnter Item # to mark as SERVED (0 for ALL, -1 to Cancel Selection): ";
+        if (cin >> serveChoice) {
+             break;
+        }
+        cout << "Invalid input! Please enter a number." << endl;
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
 
-    if (complete == 'Y') {
-        kitchen.dequeueOrder();
-        cout << "Order processed successfully!" << endl;
+    if (serveChoice == -1) {
+        cout << "Processing cancelled." << endl;
+        return;
+    }
+
+    if (serveChoice == 0) {
+        // Serve ALL
+        char confirm;
+        cout << "Mark ALL items as SERVED? (Y/N): ";
+        cin >> confirm;
+        if (toupper(confirm) == 'Y') {
+            orderToProcess->serveAllItems(); // Ensure all items are marked served
+            orderToProcess->setStatus("served");
+            kitchen.dequeueOrder();
+            cout << "Order " << orderToProcess->getOrderID() << " fully processed/served." << endl;
+        }
     } else {
-        cout << "Order processing cancelled." << endl;
+        // Serve specific item by PENDING index (1, 2, 3...)
+        if (orderToProcess->servePendingItem(serveChoice)) {
+            // Check if all items are served
+            if (orderToProcess->checkAllServed()) {
+                orderToProcess->setStatus("served");
+                kitchen.dequeueOrder();
+                cout << "All items served! Order removed from kitchen queue." << endl;
+            } else {
+                cout << "Item served. Order remains in queue until all items are ready." << endl;
+            }
+        } else {
+            cout << "Failed to serve item (Invalid choice)." << endl;
+        }
     }
 }
 
@@ -484,29 +588,28 @@ void RestaurantSystem::displayMainMenu() {
 }
 
 void RestaurantSystem::displayCustomerMenu() {
-    cout << "\n=================================" << endl;
-    cout << "        CUSTOMER MENU            " << endl;
-    cout << "=================================" << endl;
+    cout << "\n==================================" << endl;
+    cout << "        CUSTOMER MENU             " << endl;
+    cout << "==================================" << endl;
     cout << "1. View Menu" << endl;
     cout << "2. Create New Order" << endl;
-    cout << "3. View My Orders" << endl;
+    cout << "3. View My Orders / Pay Bill" << endl;
     cout << "0. Back to Main Menu" << endl;
-    cout << "=================================" << endl;
+    cout << "==================================" << endl;
     cout << "Enter your choice (0-3): ";
 }
 
 void RestaurantSystem::displayAdminMenu() {
-    cout << "\n=================================" << endl;
+    cout << "\n==================================" << endl;
     cout << "          ADMIN MENU             " << endl;
-    cout << "=================================" << endl;
-    cout << "1. View All Orders" << endl;
-    cout << "2. View Kitchen Queue" << endl;
-    cout << "3. Process Next Order (Kitchen)" << endl;
-    cout << "4. Update Order Status" << endl;  // Changed from "Manage Menu Items"
-    cout << "5. Manage Menu Items" << endl;    // Moved to option 5
+    cout << "==================================" << endl;
+    cout << "1. View Kitchen Queue" << endl;
+    cout << "2. Process Next Order" << endl;
+    cout << "3. Cancel Order" << endl;
+    cout << "4. Manage Menu Items" << endl;
     cout << "0. Back to Main Menu" << endl;
-    cout << "=================================" << endl;
-    cout << "Enter your choice (0-5): ";
+    cout << "==================================" << endl;
+    cout << "Enter your choice (0-4): ";
 }
 
 void RestaurantSystem::displayMenuManagement() {
@@ -517,10 +620,9 @@ void RestaurantSystem::displayMenuManagement() {
     cout << "2. Remove Menu Item" << endl;
     cout << "3. Edit Menu Item" << endl;
     cout << "4. Search Menu Item" << endl;
-    cout << "5. Sort Menu by Price" << endl;
     cout << "0. Back to Admin Menu" << endl;
     cout << "=================================" << endl;
-    cout << "Enter your choice (0-5): ";
+    cout << "Enter your choice (0-4): ";
 }
 
 // Authentication
@@ -584,18 +686,15 @@ void RestaurantSystem::run() {
 
                                 switch (adminChoice) {
                                     case 1:
-                                        viewOrders();
-                                        break;
-                                    case 2:
                                         viewKitchenQueue();
                                         break;
-                                    case 3:
+                                    case 2:
                                         processNextOrder();
                                         break;
-                                    case 4:  // NEW OPTION - Update Order Status
-                                        updateOrderStatus();
+                                    case 3:
+                                        cancelOrder();
                                         break;
-                                    case 5:  // Changed from 4 to 5
+                                    case 4:
                                         {
                                             int menuMgmtChoice;
                                             bool inMenuMgmt = true;
@@ -623,14 +722,11 @@ void RestaurantSystem::run() {
                                                     case 4:
                                                         searchMenuItem();
                                                         break;
-                                                    case 5:
-                                                        menu.sortMenuByPrice();
-                                                        break;
                                                     case 0:
                                                         inMenuMgmt = false;
                                                         break;
                                                     default:
-                                                        cout << "Invalid choice! Please enter a number between 0-5." << endl;
+                                                        cout << "Invalid choice! Please enter a number between 0-4." << endl;
                                                 }
                                             }
                                         }
@@ -640,7 +736,7 @@ void RestaurantSystem::run() {
                                         cout << "Returning to main menu..." << endl;
                                         break;
                                     default:
-                                        cout << "Invalid choice! Please enter a number between 0-5." << endl;
+                                        cout << "Invalid choice! Please enter a number between 0-4." << endl;
                                 }
                     }
                 }
@@ -650,8 +746,23 @@ void RestaurantSystem::run() {
                 {
                     int customerChoice;
                     bool inCustomerMenu = true;
+                    int tableNo;
 
                     cout << "\nWelcome Customer!" << endl;
+                    
+                    // Session Login
+                    while (true) {
+                        cout << "Please enter your Table Number to start (1-20): ";
+                        if (cin >> tableNo && tableNo >= 1 && tableNo <= 20) {
+                            break;
+                        } else {
+                            cout << "Invalid table number! Please enter 1-20." << endl;
+                            cin.clear();
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        }
+                    }
+                    
+                    cout << "\n[Logged in as Table " << tableNo << "]" << endl;
 
                     while (inCustomerMenu) {
                         displayCustomerMenu();
@@ -665,14 +776,36 @@ void RestaurantSystem::run() {
 
                         switch (customerChoice) {
                             case 1:
-                                displayMenu();
+                                {
+                                    // 1. Display Menu First
+                                    displayMenu();
+
+                                    // 2. Ask for Sorting
+                                    int sortChoice;
+                                    while (true) {
+                                        cout << "\nSort Menu? (1: Price, 2: Category, 0: No): ";
+                                        if (cin >> sortChoice) {
+                                            break;
+                                        }
+                                        cout << "Invalid input! Enter number." << endl;
+                                        cin.clear();
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    }
+
+                                    if (sortChoice == 1) {
+                                        menu.displaySortedByPrice();
+                                        // Do not call displayMenu() again
+                                    } else if (sortChoice == 2) {
+                                        menu.displaySortedByCategory();
+                                        // Do not call displayMenu() again
+                                    }
+                                }
                                 break;
                             case 2:
-                                createOrder();
+                                createOrder(tableNo);
                                 break;
                             case 3:
-                                // View customer's orders (simplified - shows all orders)
-                                viewOrders();
+                                viewMyOrders(tableNo);
                                 break;
                             case 0:
                                 inCustomerMenu = false;

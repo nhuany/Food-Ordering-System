@@ -73,6 +73,138 @@ void Order::removeFoodFromOrder(int orderItemID) {
     }
 }
 
+bool Order::removeFoodByIndex(int index) {
+    if (status == "served") {
+        cout << "Cannot remove item. Order already served." << endl;
+        return false;
+    }
+    
+    if (index < 1) return false;
+
+    // Case 1: Eliminate Head
+    if (index == 1) {
+        if (head != nullptr) {
+            OrderItem* temp = head;
+            head = head->getNext();
+            delete temp;
+            return true;
+        }
+        return false;
+    }
+
+    // Case 2: Eliminate Others
+    OrderItem* current = head;
+    int count = 1;
+    while (current != nullptr && count < index - 1) {
+        current = current->getNext();
+        count++;
+    }
+
+    if (current != nullptr && current->getNext() != nullptr) {
+        OrderItem* temp = current->getNext();
+        current->setNext(temp->getNext());
+        delete temp;
+        return true;
+    }
+    return false;
+}
+
+bool Order::serveItemByIndex(int index) {
+    if (index < 1) return false;
+    
+    OrderItem* current = head;
+    int count = 1;
+    while (current != nullptr && count < index) {
+        current = current->getNext();
+        count++;
+    }
+    
+    if (current != nullptr) {
+        if (current->getStatus() == "served") {
+            cout << "Item is already served." << endl;
+            return false;
+        }
+        current->setStatus("served");
+        cout << "Item #" << index << " marked as served." << endl;
+        return true;
+    }
+    return false;
+}
+
+void Order::serveAllItems() {
+    OrderItem* current = head;
+    while (current != nullptr) {
+        current->setStatus("served");
+        current = current->getNext();
+    }
+}
+
+void Order::displayPendingItems() const {
+    if (head == nullptr) {
+        cout << "No items in order." << endl;
+        return;
+    }
+
+    OrderItem* current = head;
+    int displayIndex = 0;
+    
+    cout << "Pending Food Items:" << endl;
+    cout << "--------------------------------------------------------" << endl;
+
+    bool hasPending = false;
+    while (current != nullptr) {
+        if (current->getStatus() == "pending") {
+            displayIndex++;
+            hasPending = true;
+            cout << displayIndex << ". ";
+            // Temporarily use displayItemLine but we want to avoid showing [pending] redundancy? 
+            // It's fine to show it.
+            current->displayItemLine();
+        }
+        current = current->getNext();
+    }
+    
+    if (!hasPending) {
+        cout << "  (All items served)" << endl;
+    }
+
+    cout << "--------------------------------------------------------" << endl;
+}
+
+bool Order::servePendingItem(int displayIndex) {
+    if (displayIndex < 1) return false;
+    
+    OrderItem* current = head;
+    int currentPendingIndex = 0;
+    
+    while (current != nullptr) {
+        if (current->getStatus() == "pending") {
+            currentPendingIndex++;
+            if (currentPendingIndex == displayIndex) {
+                current->setStatus("served");
+                cout << "Item marked as served." << endl;
+                return true;
+            }
+        }
+        current = current->getNext();
+    }
+    
+    return false;
+}
+
+bool Order::checkAllServed() const {
+    if (head == nullptr) return true;
+    
+    OrderItem* current = head;
+    while (current != nullptr) {
+        if (current->getStatus() != "served") {
+            return false;
+        }
+        current = current->getNext();
+    }
+    return true;
+}
+
 double Order::calculateTotal() const {
     double total = 0.0;
     OrderItem* current = head;
