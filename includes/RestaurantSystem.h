@@ -15,6 +15,10 @@ private:
     OrderList allOrders;       // Linked list for all orders (billing)
     int nextOrderID;
     int nextOrderItemID;
+    
+    // Sales Tracking
+    double dailyRevenue;
+    int totalOrdersServed;
 
     // UI Helper Functions
     void clearScreen();
@@ -51,6 +55,9 @@ public:
 
     // Authentication
     bool authenticateAdmin();
+
+    // Reports
+    void generateDailySalesReport();
 
     // Main Program Flow
     void run();
