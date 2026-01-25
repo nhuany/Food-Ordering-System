@@ -17,7 +17,7 @@ void RestaurantSystem::pauseSystem() {
     system("pause");
 }
 
-RestaurantSystem::RestaurantSystem() : nextOrderID(1001), nextOrderItemID(1), dailyRevenue(0.0), totalOrdersServed(0) {
+RestaurantSystem::RestaurantSystem() : nextOrderID(1001), nextOrderItemID(1) {
     initializeMenu(); // Load initial menu data
 }
 
@@ -420,10 +420,6 @@ void RestaurantSystem::viewMyOrders(int tableNo) {
     cin >> payChoice;
 
     if (toupper(payChoice) == 'Y') {
-        // Update Sales Tracking
-        dailyRevenue += grandTotal;
-        totalOrdersServed += orderCount;
-
         // Clear all orders for this table from the list (simulating payment and clearing table)
         allOrders.clearOrdersForTable(tableNo);
 
@@ -635,7 +631,6 @@ void RestaurantSystem::displayAdminMenu() {
     cout << "2. Process Next Order" << endl;
     cout << "3. Cancel Order" << endl;
     cout << "4. Manage Menu Items" << endl;
-    cout << "5. Generate Daily Sales Report" << endl;
     cout << "0. Back to Main Menu" << endl;
     cout << "==================================" << endl;
     cout << "Enter your choice (0-4): ";
@@ -652,17 +647,6 @@ void RestaurantSystem::displayMenuManagement() {
     cout << "0. Back to Admin Menu" << endl;
     cout << "=================================" << endl;
     cout << "Enter your choice (0-4): ";
-}
-
-// Reports
-void RestaurantSystem::generateDailySalesReport() {
-    cout << "\n========================================================" << endl;
-    cout << "              DAILY SALES REPORT                      " << endl;
-    cout << "========================================================" << endl;
-    cout << " Total Orders Served: " << totalOrdersServed << endl;
-    cout << " Total Revenue:       RM " << fixed << setprecision(2) << dailyRevenue << endl;
-    cout << "========================================================" << endl;
-    pauseSystem();
 }
 
 // Authentication
@@ -776,15 +760,12 @@ void RestaurantSystem::run() {
                                             }
                                         }
                                         break;
-                                    case 5:
-                                        generateDailySalesReport();
-                                        break;
                                     case 0:
                                         inAdminMenu = false;
                                         cout << "Returning to main menu..." << endl;
                                         break;
                                      default:
-                                        cout << "Invalid choice! Please enter a number between 0-5." << endl;
+                                        cout << "Invalid choice! Please enter a number between 0-4." << endl;
                                         pauseSystem();
                                 }
                     }
