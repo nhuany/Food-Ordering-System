@@ -8,6 +8,15 @@
 #include <cctype>
 using namespace std;
 
+// Helper Functions
+void RestaurantSystem::clearScreen() {
+    system("cls");
+}
+
+void RestaurantSystem::pauseSystem() {
+    system("pause");
+}
+
 RestaurantSystem::RestaurantSystem() : nextOrderID(1001), nextOrderItemID(1) {
     initializeMenu(); // Load initial menu data
 }
@@ -135,6 +144,7 @@ void RestaurantSystem::addMenuItem() {
     FoodItem* newItem = new FoodItem(id, name, category, price);
     menu.addFoodItem(newItem);
     cout << "Menu item added successfully!" << endl;
+    pauseSystem();
 }
 
 void RestaurantSystem::removeMenuItem() {
@@ -143,6 +153,7 @@ void RestaurantSystem::removeMenuItem() {
     // Check if menu is empty using new isEmpty() function
     if (menu.isEmpty()) {
         cout << "Menu is empty. Cannot remove items." << endl;
+        pauseSystem();
         return;
     }
 
@@ -167,6 +178,7 @@ void RestaurantSystem::removeMenuItem() {
     }
 
     menu.deleteFoodItem(id);
+    pauseSystem();
 }
 
 void RestaurantSystem::editMenuItem() {
@@ -180,6 +192,7 @@ void RestaurantSystem::editMenuItem() {
         cout << "\n========================================================" << endl;
         cout << "               MENU IS EMPTY                        " << endl;
         cout << "========================================================" << endl;
+        pauseSystem();
         return;
     }
 
@@ -272,6 +285,7 @@ void RestaurantSystem::editMenuItem() {
         cout << "             Update cancelled.                        " << endl;
         cout << "========================================================" << endl;
     }
+    pauseSystem();
 }
 
 void RestaurantSystem::searchMenuItem() {
@@ -280,6 +294,7 @@ void RestaurantSystem::searchMenuItem() {
     // Check if menu is empty
     if (menu.isEmpty()) {
         cout << "Menu is empty. Cannot search items." << endl;
+        pauseSystem();
         return;
     }
 
@@ -290,6 +305,7 @@ void RestaurantSystem::searchMenuItem() {
 
     if (name.empty()) {
         cout << "Search term cannot be empty!" << endl;
+        pauseSystem();
         return;
     }
 
@@ -297,6 +313,7 @@ void RestaurantSystem::searchMenuItem() {
     if (result) {
         cout << "Item found!" << endl;
     }
+    pauseSystem();
 }
 
 // Order Management Functions
@@ -368,6 +385,7 @@ void RestaurantSystem::createOrder(int tableNo) {
         cout << "\nOrder cancelled (no items added)." << endl;
         delete newOrder;
     }
+    pauseSystem();
 }
 
 void RestaurantSystem::viewMyOrders(int tableNo) {
@@ -381,8 +399,7 @@ void RestaurantSystem::viewMyOrders(int tableNo) {
     if (orderCount == 0) {
         cout << "\nNo orders found for your table." << endl;
         cout << "\nPress Enter to return to menu...";
-        cin.ignore();
-        cin.get();
+        pauseSystem();
         return;
     }
 
@@ -413,8 +430,7 @@ void RestaurantSystem::viewMyOrders(int tableNo) {
     }
 
     cout << "\nPress Enter to return to menu...";
-    cin.ignore();
-    cin.get();
+    pauseSystem();
 }
 
 
@@ -428,6 +444,7 @@ void RestaurantSystem::cancelOrder() {
         cout << "\n--------------------------------------------------------" << endl;
         cout << "          No orders in kitchen to cancel.              " << endl;
         cout << "--------------------------------------------------------" << endl;
+        pauseSystem();
         return;
     }
 
@@ -445,6 +462,7 @@ void RestaurantSystem::cancelOrder() {
     Order* order = allOrders.findOrderByID(orderID);
     if (!order) {
         cout << "Order ID " << orderID << " not found." << endl;
+        pauseSystem();
         return;
     }
 
@@ -482,12 +500,14 @@ void RestaurantSystem::cancelOrder() {
              cout << "Failed to remove item. Invalid index or order served." << endl;
         }
     }
+    pauseSystem();
 }
 
 // Kitchen Management Functions
 void RestaurantSystem::viewKitchenQueue() {
     cout << "\n=== KITCHEN QUEUE ===" << endl;
     kitchen.displayQueue();
+    pauseSystem();
 }
 
 void RestaurantSystem::processNextOrder() {
@@ -495,6 +515,7 @@ void RestaurantSystem::processNextOrder() {
 
     if (kitchen.isEmpty()) {
         cout << "No orders in the kitchen queue." << endl;
+        pauseSystem();
         return;
     }
 
@@ -502,6 +523,7 @@ void RestaurantSystem::processNextOrder() {
     Order* nextOrder = kitchen.getFront();
     if (nextOrder == nullptr) {
         cout << "No orders in the kitchen queue." << endl;
+        pauseSystem();
         return;
     }
 
@@ -518,6 +540,7 @@ void RestaurantSystem::processNextOrder() {
 
     if (orderToProcess == nullptr) {
         cout << "No pending orders to process." << endl;
+        pauseSystem();
         return;
     }
 
@@ -544,6 +567,7 @@ void RestaurantSystem::processNextOrder() {
 
     if (serveChoice == -1) {
         cout << "Processing cancelled." << endl;
+        pauseSystem();
         return;
     }
 
@@ -650,6 +674,7 @@ bool RestaurantSystem::authenticateAdmin() {
         }
     }
 
+    clearScreen();
     return false;
 }
 
@@ -659,6 +684,7 @@ void RestaurantSystem::run() {
     bool running = true;
 
     while (running) {
+        clearScreen();
         displayMainMenu();
 
         // Get main menu choice with error checking
@@ -675,6 +701,7 @@ void RestaurantSystem::run() {
                     bool inAdminMenu = true;
 
                     while (inAdminMenu) {
+                        clearScreen();
                         displayAdminMenu();
 
                         // Get admin menu choice with error checking
@@ -700,6 +727,7 @@ void RestaurantSystem::run() {
                                             bool inMenuMgmt = true;
 
                                             while (inMenuMgmt) {
+                                                clearScreen();
                                                 displayMenuManagement();
 
                                                 // Get menu management choice with error checking
@@ -727,6 +755,7 @@ void RestaurantSystem::run() {
                                                         break;
                                                     default:
                                                         cout << "Invalid choice! Please enter a number between 0-4." << endl;
+                                                        pauseSystem();
                                                 }
                                             }
                                         }
@@ -735,8 +764,9 @@ void RestaurantSystem::run() {
                                         inAdminMenu = false;
                                         cout << "Returning to main menu..." << endl;
                                         break;
-                                    default:
+                                     default:
                                         cout << "Invalid choice! Please enter a number between 0-4." << endl;
+                                        pauseSystem();
                                 }
                     }
                 }
@@ -752,6 +782,7 @@ void RestaurantSystem::run() {
                     
                     // Session Login
                     while (true) {
+                        clearScreen();
                         cout << "Please enter your Table Number to start (1-20): ";
                         if (cin >> tableNo && tableNo >= 1 && tableNo <= 20) {
                             break;
@@ -765,6 +796,8 @@ void RestaurantSystem::run() {
                     cout << "\n[Logged in as Table " << tableNo << "]" << endl;
 
                     while (inCustomerMenu) {
+                        clearScreen();
+                        cout << "\n[Logged in as Table " << tableNo << "]" << endl;
                         displayCustomerMenu();
 
                         // Get customer menu choice with error checking
@@ -794,10 +827,15 @@ void RestaurantSystem::run() {
 
                                     if (sortChoice == 1) {
                                         menu.displaySortedByPrice();
+                                        pauseSystem();
                                         // Do not call displayMenu() again
                                     } else if (sortChoice == 2) {
                                         menu.displaySortedByCategory();
+                                        pauseSystem();
                                         // Do not call displayMenu() again
+                                    } else {
+                                        // Normal display if they chose 0 or invalid (handled by earlier loop actually, but good to be safe)
+                                        pauseSystem(); 
                                     }
                                 }
                                 break;
@@ -813,6 +851,7 @@ void RestaurantSystem::run() {
                                 break;
                             default:
                                 cout << "Invalid choice! Please enter a number between 0-3." << endl;
+                                pauseSystem();
                         }
                     }
                 }
@@ -824,8 +863,9 @@ void RestaurantSystem::run() {
                 running = false;
                 break;
 
-            default:
+             default:
                 cout << "Invalid choice! Please enter a number between 0-2." << endl;
+                pauseSystem();
         }
 
         // Clear input buffer

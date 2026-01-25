@@ -16,6 +16,10 @@ private:
     int nextOrderID;
     int nextOrderItemID;
 
+    // UI Helper Functions
+    void clearScreen();
+    void pauseSystem();
+
 public:
     RestaurantSystem();
     ~RestaurantSystem();
