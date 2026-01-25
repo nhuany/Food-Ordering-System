@@ -781,8 +781,9 @@ void RestaurantSystem::run() {
                     cout << "\nWelcome Customer!" << endl;
                     
                     // Session Login
+                    // Session Login
+                    clearScreen();
                     while (true) {
-                        clearScreen();
                         cout << "Please enter your Table Number to start (1-20): ";
                         if (cin >> tableNo && tableNo >= 1 && tableNo <= 20) {
                             break;
@@ -790,6 +791,8 @@ void RestaurantSystem::run() {
                             cout << "Invalid table number! Please enter 1-20." << endl;
                             cin.clear();
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            pauseSystem();
+                            clearScreen();
                         }
                     }
                     

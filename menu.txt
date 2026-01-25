@@ -1,7 +1,7 @@
-101,Burger,Main Course,12.88
-102,Fries,Side,6.5
+102,Fries,Side,8
 103,Coke,Beverage,3.5
 104,Pizza,Main Course,25.99
 105,Salad,Appetizer,8.99
 106,Ice Cream,Dessert,6.5
 107,Sprite,Beverage,3.99
+110,Maggi Goreng,Main Course,5
